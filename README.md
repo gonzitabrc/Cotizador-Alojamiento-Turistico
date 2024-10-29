@@ -19,4 +19,3 @@ sigue los pasos, acepta los permisos, al finalizar copia la url de la aplicació
 6) con el código de ese archivo 'iframe.html' crea nuevo un archivo html y subilo al directorio web donde deseas publicar tu cotizador, por ejemplo: https://tusitioweb.com/cotizador.html
 7) accede a la url del paso anterior y prueba el formulario cotizador, una vez que cotizas el servicio puedes enviar la solicitud de reserva y esta llegará por email al correo que configuraste en el paso 4)
 
-Si necesitas ayuda (rentada $$) para implementarlo, enviame un email a gonzita@gmail.com
