@@ -1,0 +1,770 @@
+<!-- 
+    © 2024 DDW, Publicidad Online y Programación Web
+    Autor: Gonzalo Reynoso - DDW, gonzita@gmail.com
+    Sitio web: https://ddw.com.ar
+    Descripción: Cotizador Online para Alojamiento Turístico V 1.1
+    Licencia: MIT 
+-->
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <base target="_top">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Cotizador de Alojamiento Turístico V1.1</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.19/dist/sweetalert2.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.19/dist/sweetalert2.all.min.js"></script>
+    <style>
+        body {
+            background-color: #292d30;
+            padding-top: 2rem;
+        }
+
+        .form-container {
+            background-color: #ffffff;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .section-title {
+            background-color: #292d30; //    #0d6efd
+            color: white;
+            padding: 0.75rem;
+            border-radius: 5px;
+            margin-bottom: 1.5rem;
+            font-weight: bold;
+        }
+
+        #loadingMessage {
+            display: none;
+            color: #D14242;
+            margin-bottom: 1rem;
+            text-align: center;
+            background-color: #b7ffb7; // #00ff00   #fff8c4  #b7ffb7
+            padding: 1rem;
+            border-radius: 5px;
+        }
+
+        #diferenciaDias {
+            display: none;
+            color: #0d6efd;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="form-container">
+                    <div id="loadingMessage">Espera un instante, estoy cargando las tarifas
+                        disponibles...</div>
+
+                    <form id="cotizadorForm">
+                        <div class="section-title">Cotiza tu Depto o Cabaña</div>
+
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label for="fechaCheckIn" class="form-label">Check In</label>
+                                <input type="date" class="form-control" id="fechaCheckIn" name="fechaCheckIn"
+                                    required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="fechaCheckOut" class="form-label">Check Out</label>
+                                <input type="date" class="form-control" id="fechaCheckOut"
+                                    name="fechaCheckOut" required>
+                            </div>
+
+                            <div id="diferenciaDias" class="col-12 mt-3"></div>
+                            <input type="hidden" class="form-control mt-2" id="dias_de_alquiler"
+                                name="dias_de_alquiler">
+
+                            <div class="col-12">
+                                <label for="categoria" class="form-label">Tipo de Alojamiento / Cantidad de Personas y habitaciones requeridas</label>
+                                <select id="categoria" name="categoria" class="form-select" required>
+                                    <option value="">Selecciona una opción...</option>
+                                </select>
+                                <input type="hidden" class="form-control mt-2" id="valor_alquiler"
+                                    name="valor_alquiler">
+                                <input type="hidden" class="form-control mt-2" id="valor_seguro_ext"
+                                    name="valor_seguro_ext">
+
+                                <div class="form-check mt-2"  hidden>
+                                    <input type="checkbox" class="form-check-input" id="agrega_seguro_extendido"
+                                        name="agrega_seguro_extendido">
+                                    <label class="form-check-label" for="agrega_seguro_extendido">Agregar limpieza diaria ($<span id="valor_seguro">0</span>)</label>
+                                </div>
+                            </div>
+                            <!--
+                            <div class="section-title d-flex justify-content-end  bg-transparent">
+                                <button class="btn btn-warning" id="toggle-adicionales" type="button"
+                                    data-bs-toggle="collapse" data-bs-target="#form-adicionales" aria-expanded="false"
+                                    aria-controls="form-adicionales">
+                                    Agrega Adicionales
+                                </button>
+                            </div>
+                            -->
+                            <div class="collapse" id="form-adicionales">
+                                <div class="row g-3">
+                                </div>
+                            </div>
+</div>
+                            <div class="container">
+                                <div class="row g-3">
+
+                                    <div class="col-12 col-md-6">
+                                        <div class="card">
+                                            <div class="card-body">
+                                                <h6 class="card-title">Formas de Pago</h6>
+                                                <div class="mb-3">
+                                                    <select id="formas_pago" name="formas_pago" class="form-select"
+                                                        required>
+                                                        <option value="">Selecciona una opción...</option>
+                                                    </select>
+                                                    <input type="hidden" class="form-control" id="formas_pago_ajuste"
+                                                        name="formas_pago_ajuste">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-12 col-md-6">
+                                        <div class="card">
+                                            <div class="card-body">
+                                                <h6 class="card-title mb-3">Servicio</h6>
+                                                <ul id="lista_servicios"></ul>
+                                                <input type="hidden" id="input_servicios" name="input_servicios">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-12">
+                                        <div class="card">
+                                            <div class="card-body">
+                                                <h5 class="card-title">Resumen de Cargos</h5>
+                                                <p id="resumen_alquiler" class="card-text">Alquiler: $0</p>
+                                                <p id="resumen_servicios" class="card-text">Servicios extra y
+                                                    adicionales: $0</p>
+                                                <p id="resumen_total" class="card-text fw-bold">Valor total: $0</p>
+                                                <p id="resumen_ajuste" class="card-text">Ajuste por forma de pago: $0
+                                                </p>
+                                                <p id="resumen_pagar" class="card-text fw-bold">Valor final a pagar: $0
+                                                </p>
+                                                <input type="hidden" id="valorTotalServicios"
+                                                    name="valorTotalServicios">
+                                                <input type="hidden" id="valorTotalGeneral" name="valorTotalGeneral">
+                                                <input type="hidden" id="valorAPagar" name="valorAPagar">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="section-title">Tus Datos</div>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label for="nombre" class="form-label">Nombre Completo</label>
+                                    <input type="text" class="form-control" id="nombre" name="nombre" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="email" class="form-label">Email</label>
+                                    <input type="email" class="form-control" id="email" name="email" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="telefono" class="form-label">Teléfono</label>
+                                    <input type="tel" class="form-control" id="telefono" name="telefono" required>
+                                </div>
+                                <div class="col-12">
+                                    <label for="mensaje" class="form-label">Mensaje (opcional)</label>
+                                    <textarea class="form-control" id="mensaje" name="mensaje" rows="3"></textarea>
+                                </div>
+                            </div>
+
+                            <div class="text-center mt-4">
+                                <button type="submit" class="btn btn-primary btn-lg" id="submitButton">
+                                    Solicitar Reserva <span id="loadingMessage"
+                                        style="display:none; font-weight: normal;">(Enviando formulario...)</span>
+                                </button>
+                            </div>
+
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="container">
+        <footer class="d-flex justify-content-center align-items-center py-3 my-4 border-top bg-dark text-white">
+            <p class="mb-0 text-center">© 2024 <a href="https://ddw.com.ar"
+                    class="text-white text-decoration-none">DDW</a> Cotizador de Alojamiento Turístico</p>
+        </footer>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+document.addEventListener('DOMContentLoaded', function () {
+    let tarifasData;
+    const loadingMessage = document.getElementById('loadingMessage');
+    const fechaCheckInInput = document.getElementById('fechaCheckIn');
+    const fechaCheckOutInput = document.getElementById('fechaCheckOut');
+    const categoriaSelect = document.getElementById('categoria');
+
+    setMinDate('fechaCheckIn');
+    setMinDate('fechaCheckOut');
+
+    fechaCheckInInput.disabled = true;
+    fechaCheckOutInput.disabled = true;
+    categoriaSelect.disabled = true;
+
+    function setMinDate(fieldId) {
+        const now = new Date();
+        const localDate = now.toISOString().split('T')[0];
+        document.getElementById(fieldId).setAttribute('min', localDate);
+    }
+
+    function handleFechaCheckInChange() {
+        const dias_offset_fechaCheckIn = 1;
+        const fechaCheckIn = this.value;
+        const fechaCheckInDate = new Date(fechaCheckIn);
+
+        const fechaMinCheckOut = new Date(fechaCheckInDate);
+        fechaMinCheckOut.setDate(fechaMinCheckOut.getDate() + dias_offset_fechaCheckIn);
+
+        const minFechaCheckOut = fechaMinCheckOut.toISOString().split('T')[0];
+
+        fechaCheckOutInput.setAttribute('min', minFechaCheckOut);
+        fechaCheckOutInput.value = '';
+        categoriaSelect.innerHTML = '<option value="">Selecciona una opción...</option>';
+        resetearCamposResumen();
+        calculoDiasEstadia();
+    }
+
+    function handleFechaCheckOutChange() {
+        const fechaCheckIn = fechaCheckInInput.value;
+        const fechaCheckOut = this.value;
+
+        if (fechaCheckIn && fechaCheckOut) {
+            loadingMessage.style.display = 'block';
+
+            if (validarFechas(fechaCheckIn, fechaCheckOut)) {
+                resetearCamposResumen();
+                mostrarOpcionesCategorias(fechaCheckIn, fechaCheckOut);
+            }
+
+            loadingMessage.style.display = 'none';
+        }
+    }
+
+    function validarFechas(fechaCheckIn, fechaCheckOut) {
+        if (!tarifasData || !tarifasData.fechas_tarifas) {
+            mostrarError('Los datos de tarifas no están disponibles. Por favor, recarga la página.');
+            return false;
+        }
+        const checkIn = new Date(fechaCheckIn);
+        const checkOut = new Date(fechaCheckOut);
+        const diffMs = checkOut - checkIn;
+        const diffDays = diffMs / (1000 * 60 * 60 * 24);
+
+        if (diffDays < 1) {
+            mostrarError('La fecha de check-out debe ser posterior a la fecha de check-in.');
+            return false;
+        }
+        const inputDiasEstadia = document.getElementById('dias_de_estadia');
+        if (inputDiasEstadia) {
+            inputDiasEstadia.value = diffDays;
+        }
+        return true;
+    }
+
+    function calculoDiasEstadia() {
+        const fechaCheckInInput = document.getElementById('fechaCheckIn');
+        const fechaCheckOutInput = document.getElementById('fechaCheckOut');
+        const diferenciaDiasDiv = document.getElementById('diferenciaDias');
+
+        function calcularDiferencia() {
+            const checkIn = new Date(fechaCheckInInput.value);
+            const checkOut = new Date(fechaCheckOutInput.value);
+
+            if (checkIn && checkOut && checkOut > checkIn) {
+                const diferenciaMs = checkOut - checkIn;
+                const dias = Math.floor(diferenciaMs / (1000 * 60 * 60 * 24));
+
+                diferenciaDiasDiv.style.display = 'block';
+                diferenciaDiasDiv.innerHTML = `Días de estadía: ${dias} días`;
+            } else {
+                diferenciaDiasDiv.style.display = 'none';
+            }
+        }
+
+        fechaCheckInInput.addEventListener('change', calcularDiferencia);
+        fechaCheckOutInput.addEventListener('change', calcularDiferencia);
+    }
+
+
+
+
+function inicializarAplicacion(data) {
+    // Asignar datos de tarifas
+    tarifasData = data;
+    
+    // Habilitar los campos del formulario
+    fechaCheckInInput.disabled = false;
+    fechaCheckOutInput.disabled = false;
+    categoriaSelect.disabled = false;
+
+    // Inicializar componentes del formulario
+    generarFormularioAdicionales();
+    mostrarFormasPago();
+    calculoDiasEstadia();
+    enviarFormularioCotizador();
+
+    // Event listeners para las fechas
+    fechaCheckInInput.addEventListener('change', handleFechaCheckInChange);
+    fechaCheckOutInput.addEventListener('change', handleFechaCheckOutChange);
+
+    // Event listeners para otros elementos del formulario
+    document.getElementById('agrega_seguro_extendido').addEventListener('change', calcularResumenCompleto);
+    document.getElementById('formas_pago').addEventListener('change', calcularResumenCompleto);
+
+    // Ocultar mensaje de carga
+    loadingMessage.style.display = 'none';
+}
+
+            obtenerDatosTarifas();
+
+            document.getElementById('adicionales-container').addEventListener('change', function (event) {
+                if (event.target && event.target.classList.contains('adicional-select')) {
+                    calcularResumenCompleto();
+                }
+            });
+
+
+            function obtenerDatosTarifas() {
+                loadingMessage.style.display = 'block';
+                google.script.run
+                    .withSuccessHandler(function (data) {
+                        let parsedData;
+                        try {
+                            parsedData = JSON.parse(data);
+                            //  alert(JSON.stringify(parsedData, null, 2)); 
+                        } catch (error) {
+                            alert('Error al analizar los datos de tarifas: ' + error.message);
+                            return;
+                        }
+                        inicializarAplicacion(parsedData);
+
+                        tarifasData = parsedData;
+
+                        if (!tarifasData) {
+                            alert('Los datos de tarifas no están disponibles. Por favor, recarga la página.');
+                            return;
+                        }
+                    })
+                    .withFailureHandler(manejarError)
+                    .generarJsonTarifas();
+            }
+
+            function manejarError(error) {
+                console.error('Error al obtener los datos:', error);
+                mostrarError('Error al cargar los datos de tarifas. Por favor, intenta de nuevo más tarde.');
+                loadingMessage.style.display = 'none';
+            }
+
+
+            function resetearCamposResumen() {
+                document.getElementById('lista_servicios').innerHTML = '';
+                document.getElementById('resumen_alquiler').textContent = 'Alquiler: $0';
+                document.getElementById('resumen_servicios').textContent = 'Servicios extra y adicionales: $0';
+                document.getElementById('resumen_total').textContent = 'Valor total: $0';
+                document.getElementById('resumen_ajuste').textContent = 'Ajuste por forma de pago: $0';
+                document.getElementById('resumen_pagar').textContent = 'Valor final a pagar: $0';
+                document.getElementById('input_servicios').value = ''; // hidden
+                document.getElementById('valorTotalServicios').value = 0;
+                document.getElementById('valorTotalGeneral').value = 0;
+                document.getElementById('valorAPagar').value = 0;
+                document.getElementById('valor_alquiler').value = '';
+                document.getElementById('valor_seguro_ext').value = '';
+                document.getElementById('valor_seguro').textContent = '0';
+
+            }
+
+            function mostrarOpcionesCategorias(fechaCheckIn, fechaCheckOut) {
+                const retiro = new Date(fechaCheckIn);
+                const devolucion = new Date(fechaCheckOut);
+                const diffMs = devolucion - retiro;
+                const diffDays = diffMs / (1000 * 60 * 60 * 24);
+                const fechaInicioTarifa = new Date(tarifasData.fechas_tarifas.inicio_fecha_tarifa);
+                const fechaFinTarifa = new Date(tarifasData.fechas_tarifas.fin_fecha_tarifa);
+
+                let fueraDeRango = false;
+
+                if (retiro < fechaInicioTarifa || devolucion > fechaFinTarifa) {
+                    mostrarError('Tengo tarifas hasta ' + fechaFinTarifa + '. Envía tu consulta y te responderemos con la cotización', 'warning');
+                    fueraDeRango = true;
+                }
+
+                const mesRetiro = new Date(retiro.getFullYear(), retiro.getMonth(), 1).toISOString().split('T')[0];
+
+                const tarifasMes = tarifasData.tarifas.tarifa_diaria[mesRetiro];
+                if (!tarifasMes) {
+                    mostrarError('No hay tarifas disponibles para la fecha seleccionada.', 'error');
+                    return;
+                }
+
+                const opciones = Object.keys(tarifasMes).map(categoria => {
+                    const precioPorDia = tarifasMes[categoria];
+                    const seguroExtendido = tarifasData.tarifas.seguroExt[categoria] * diffDays;
+                    const total = precioPorDia * diffDays;
+
+                    const valorAlquiler = fueraDeRango ? null : total; // Asignar total solo si no está fuera de rango
+                    const valorSeguro = fueraDeRango ? null : seguroExtendido; // Asignar seguro solo si no está fuera de rango
+
+                    return {
+                        texto: fueraDeRango
+                            ? `${categoria} - (consultar cotización)`
+                            : `${categoria} - valor alquiler: $${redondearImporte(total)} (por día: $${redondearImporte(precioPorDia)})`,
+                        valorAlquiler: valorAlquiler !== null ? redondearImporte(valorAlquiler) : null,
+                        valorSeguro: valorSeguro !== null ? redondearImporte(valorSeguro) : null
+                    };
+                });
+
+                categoriaSelect.innerHTML = '<option value="">Selecciona una opción...</option>';
+                opciones.forEach(opcion => {
+                    const option = document.createElement('option');
+                    option.value = JSON.stringify({ alquiler: opcion.valorAlquiler, seguro: opcion.valorSeguro });
+                    option.text = opcion.texto;
+                    categoriaSelect.appendChild(option);
+                });
+
+                categoriaSelect.addEventListener('change', function () {
+                    const valoresSeleccionados = JSON.parse(categoriaSelect.value);
+                    const valorAlquiler = valoresSeleccionados.alquiler;
+                    const valorSeguro = valoresSeleccionados.seguro;
+
+                    document.getElementById('valor_alquiler').value = valorAlquiler ? `${valorAlquiler}` : '0';
+                    document.getElementById('valor_seguro_ext').value = valorSeguro ? `${valorSeguro}` : '0';
+
+                    const seguroCheckbox = document.getElementById('agrega_seguro_extendido');
+                    const valorSeguroTexto = seguroCheckbox.nextElementSibling.querySelector('span');
+                    valorSeguroTexto.textContent = valorSeguro || 0;
+
+                    calcularResumenCompleto();
+                });
+
+                return true;
+            }
+
+
+            function redondearImporte(num) {
+                const direccion = "abajo"; // "arriba" o "abajo"
+                const multiplo = 100;
+                if (direccion === "arriba") {
+                    return Math.ceil(num / multiplo) * multiplo;
+                } else if (direccion === "abajo") {
+                    return Math.floor(num / multiplo) * multiplo;
+                } else {
+                    throw new Error("La dirección debe ser 'arriba' o 'abajo'.");
+                }
+            }
+
+
+            function generarFormularioAdicionales() {
+                const contenedor = document.getElementById('form-adicionales');
+                contenedor.classList.add('row');
+
+                const adicionales = tarifasData.adicionales;
+
+                adicionales.forEach(function (adicional, index) {
+                    const fieldContainer = document.createElement('div');
+                    fieldContainer.classList.add('col-12', 'col-md-6', 'col-lg-4', 'mb-3');
+
+                    const card = document.createElement('div');
+                    card.classList.add('card');
+
+                    const cardBody = document.createElement('div');
+                    cardBody.classList.add('card-body');
+                    const label = document.createElement('label');
+                    label.classList.add('form-label');
+                    label.innerText = `${adicional.adicional} ($${adicional.costo_unitario}) - Tarifa por: ${adicional.tipo_tarifa}`;
+                    label.setAttribute('for', `adicional-${index}`);
+
+                    cardBody.appendChild(label);
+
+                    if (adicional.max_unidades === 1) {
+                        const checkboxDiv = document.createElement('div');
+                        checkboxDiv.classList.add('form-check');
+
+                        const checkbox = document.createElement('input');
+                        checkbox.type = 'checkbox';
+                        checkbox.classList.add('form-check-input');
+                        checkbox.id = `adicional-${index}`;
+                        checkbox.dataset.costo = adicional.costo_unitario;
+                        checkbox.dataset.tipoTarifa = adicional.tipo_tarifa; // Agregar tipo_tarifa al dataset del checkbox
+                        checkbox.value = 0; // Por defecto, no está seleccionado
+
+                        checkbox.addEventListener('change', function () {
+                            checkbox.value = checkbox.checked ? 1 : 0;
+                            calcularResumenCompleto(); // Recalcular el resumen si cambia
+                        });
+
+                        checkboxDiv.appendChild(checkbox);
+                        cardBody.appendChild(checkboxDiv);
+                    }
+
+                    if (adicional.max_unidades === 2) {
+                        const select = document.createElement('select');
+                        select.classList.add('form-select');
+                        select.id = `adicional-${index}`;
+                        select.dataset.costo = adicional.costo_unitario;
+                        select.dataset.tipoTarifa = adicional.tipo_tarifa;
+
+                        for (let i = 0; i <= 2; i++) {
+                            const option = document.createElement('option');
+                            option.value = i;
+                            option.text = i;
+                            select.appendChild(option);
+                        }
+
+                        select.addEventListener('change', function () {
+                            calcularResumenCompleto();
+                        });
+
+                        cardBody.appendChild(select);
+                    }
+
+                    card.appendChild(cardBody);
+                    fieldContainer.appendChild(card);
+                    contenedor.appendChild(fieldContainer);
+                });
+            }
+
+
+            function mostrarFormasPago() {
+                const formasPagoSelect = document.getElementById('formas_pago');
+                const formasPagoAjusteInput = document.getElementById('formas_pago_ajuste');
+
+                formasPagoSelect.innerHTML = '';
+
+                tarifasData.formas_pago.forEach((forma, index) => {
+                    const { forma_pago, ajuste_decimal, cuotas } = forma;
+
+                    let ajusteTexto = '';
+                    if (ajuste_decimal > 0) {
+                        ajusteTexto = ` - ${Math.round(ajuste_decimal * 100)}% de recargo`;
+                    } else if (ajuste_decimal < 0) {
+                        ajusteTexto = ` - ${Math.abs(Math.round(ajuste_decimal * 100))}% de descuento`;
+                    } else {
+                        ajusteTexto = ` - 0% de recargo`;
+                    }
+
+                    const optionTexto = `${forma_pago}${ajusteTexto}`;
+
+                    const option = document.createElement('option');
+                    option.value = forma_pago;
+                    option.text = optionTexto;
+
+                    formasPagoSelect.appendChild(option);
+
+                    if (index === 0) {
+                        option.selected = true;
+                        formasPagoAjusteInput.value = ajuste_decimal;
+                    }
+                });
+
+                formasPagoSelect.addEventListener('change', () => {
+                    const selectedIndex = formasPagoSelect.selectedIndex;
+                    const selectedAjusteDecimal = tarifasData.formas_pago[selectedIndex].ajuste_decimal;
+                    formasPagoAjusteInput.value = selectedAjusteDecimal;
+                });
+            }
+
+            function calcularResumenCompleto() {
+                const diasDeAlquiler = parseFloat(document.getElementById('dias_de_alquiler').value) || 0;
+                const valorAlquiler = parseFloat(document.getElementById('valor_alquiler').value) || 0;
+                const valorSeguroExt = parseFloat(document.getElementById('valor_seguro_ext').value) || 0;
+                const agregarSeguroExt = document.getElementById('agrega_seguro_extendido').checked;
+                const formasPagoAjuste = parseFloat(document.getElementById('formas_pago_ajuste').value) || 0;
+
+                const adicionales = tarifasData.adicionales;
+                let totalAdicionales = 0;
+                let listaAdicionales = [];
+
+                adicionales.forEach(function (adicional, index) {
+                    const elemento = document.getElementById(`adicional-${index}`);
+                    const cantidad = parseInt(elemento.value);
+                    const costoUnitario = parseInt(elemento.dataset.costo);
+                    const tipoTarifaAdicional = elemento.dataset.tipoTarifa;
+                    let costoTotal = 0;
+
+                    if (tipoTarifaAdicional === "estadia") {
+                        costoTotal = cantidad * costoUnitario;
+                    } else if (tipoTarifaAdicional === "dia") {
+                        costoTotal = cantidad * costoUnitario * Math.floor(diasDeAlquiler);
+                    }
+
+                    if (cantidad > 0) {
+                        listaAdicionales.push(`${adicional.adicional} (${cantidad}): $${costoTotal}`);
+                    }
+
+                    totalAdicionales += costoTotal;
+                });
+
+                let valorTotalServicios = 0;
+                if (agregarSeguroExt) {
+                    valorTotalServicios += valorSeguroExt;
+                }
+                valorTotalServicios += totalAdicionales;
+
+                let valorTotalGeneral = valorAlquiler + valorTotalServicios;
+                const valorAPagar = valorTotalGeneral * (1 + formasPagoAjuste);
+
+                const listaServicios = [];
+                if (valorAlquiler > 0) {
+                    listaServicios.push(`Alquiler: $${valorAlquiler}`);
+                } else if (valorAlquiler === 0 || valorAlquiler === null || valorAlquiler === '' || isNaN(valorAlquiler) || typeof valorAlquiler === 'string') {
+                    listaServicios.push(`Alquiler: <span class="text-danger">(a cotizar)</span>`);
+                }
+
+                if (agregarSeguroExt && valorSeguroExt > 0) {
+                    listaServicios.push(`Seguro extendido: $${valorSeguroExt}`);
+                }
+
+                const datosServicios = {
+                    ...(agregarSeguroExt && valorSeguroExt > 0 && { seguroExtendido: valorSeguroExt }),
+                    ...(listaAdicionales && listaAdicionales.length > 0 && { adicionales: listaAdicionales })
+                };
+
+                const resumenElement = document.getElementById('lista_servicios');
+                resumenElement.innerHTML = '';
+                resumenElement.classList.add('list-group');
+
+                listaServicios.concat(listaAdicionales).forEach(item => {
+                    const li = document.createElement('li');
+                    li.innerHTML = item;
+                    li.classList.add('list-group-item');
+                    resumenElement.appendChild(li);
+                });
+
+                const jsonDatosServicios = JSON.stringify(datosServicios);
+                let inputServicios = document.getElementById('input_servicios');
+                inputServicios.value = jsonDatosServicios;
+
+                if (valorAlquiler > 0) {
+                    document.getElementById('resumen_alquiler').innerText = `Alquiler: $${valorAlquiler}`;
+                } else if (valorAlquiler === 0 || valorAlquiler === null || valorAlquiler === '' || isNaN(valorAlquiler) || typeof valorAlquiler === 'string') {
+                    document.getElementById('resumen_alquiler').innerHTML = `Alquiler: <span class="text-danger">(a cotizar)</span>`;
+                }
+                document.getElementById('resumen_servicios').innerText = `Servicios extra y adicionales: $${valorTotalServicios}`;
+                document.getElementById('resumen_total').innerText = `Valor Total: $${valorTotalGeneral}`;
+                document.getElementById('resumen_ajuste').innerText = `Ajuste por forma de pago: ${Math.round(formasPagoAjuste * 100)}%`;
+                document.getElementById('resumen_pagar').innerText = `Valor final: $${Math.round(valorAPagar)}`;
+
+                document.getElementById('valorTotalServicios').value = valorTotalServicios;
+                document.getElementById('valorTotalGeneral').value = valorTotalGeneral;
+                document.getElementById('valorAPagar').value = Math.round(valorAPagar);
+
+            }
+
+        });
+    </script>
+    <script>
+        function mostrarError(mensaje, tipo = 'error') {
+            Swal.fire({
+                title: tipo === 'error' ? 'Error' : 'Advertencia',
+                text: mensaje,
+                icon: tipo,
+                confirmButtonText: 'Ok'
+            });
+        }
+
+
+
+        function enviarFormularioCotizador() {
+            document.getElementById('cotizadorForm').addEventListener('submit', function (e) {
+                e.preventDefault();
+
+                var submitButton = document.getElementById('submitButton');
+                var loadingMessage = document.getElementById('loadingMessage');
+
+                submitButton.disabled = true;
+                loadingMessage.style.display = 'inline';
+
+                var datos = {
+                    fechaCheckIn: document.getElementById('fechaCheckIn').value,
+                    fechaCheckOut: document.getElementById('fechaCheckOut').value,
+                    categoria: document.getElementById('categoria').options[document.getElementById('categoria').selectedIndex].text,
+                    detalleServicios: document.getElementById('input_servicios').value,
+                    valor_alquiler: parseFloat(document.getElementById('valor_alquiler').value) || 0,
+                    valorTotalServicios: parseFloat(document.getElementById('valorTotalServicios').value) || 0,
+                    valorTotalGeneral: parseFloat(document.getElementById('valorTotalGeneral').value) || 0,
+                    //formaPago: document.getElementById('formas_pago').value,
+                    formaPago: document.getElementById('formas_pago').options[document.getElementById('formas_pago').selectedIndex].text,
+                    valorAPagar: parseFloat(document.getElementById('valorAPagar').value) || 0,
+                    nombre: document.getElementById('nombre').value,
+                    email: document.getElementById('email').value,
+                    telefono: document.getElementById('telefono').value,
+                    mensaje: document.getElementById('mensaje').value
+                };
+
+                google.script.run.withSuccessHandler(function (response) {
+                    //submitButton.disabled = false;
+                    loadingMessage.style.display = 'none';
+
+                    if (response.status === 'ok') {
+                        Swal.fire({
+                            title: '¡Muchas gracias!',
+                            text: 'Tu solicitud de reserva fue enviada, pronto te contactaremos. Si deseas realizar otra cotización, actualiza la página',
+                            icon: 'success',
+                            confirmButtonText: 'Ok'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                resetearFormularioCotizador();
+                            }
+                        });
+                    }
+                }).registrarReserva(datos);
+            });
+        }
+
+
+        function resetearFormularioCotizador() {
+            document.getElementById('cotizadorForm').reset();
+            document.getElementById('lista_servicios').innerHTML = '';
+            document.getElementById('resumen_alquiler').textContent = 'Alquiler: $0';
+            document.getElementById('resumen_servicios').textContent = 'Servicios extra y adicionales: $0';
+            document.getElementById('resumen_total').textContent = 'Valor total: $0';
+            document.getElementById('resumen_ajuste').textContent = 'Ajuste por forma de pago: $0';
+            document.getElementById('resumen_pagar').textContent = 'Valor final a pagar: $0';
+            document.getElementById('input_servicios').value = '';
+            document.getElementById('valorTotalServicios').value = 0;
+            document.getElementById('valorTotalGeneral').value = 0;
+            document.getElementById('valorAPagar').value = 0;
+            document.getElementById('diferenciaTiempo').innerHTML = '';
+            document.getElementById('categoria').selectedIndex = 0;
+            document.getElementById('valor_alquiler').value = '';
+            document.getElementById('valor_seguro_ext').value = '';
+            document.getElementById('agrega_seguro_extendido').checked = false;
+            document.getElementById('valor_seguro').textContent = '0';
+
+            const fechaCheckInInput = document.getElementById('fechaCheckIn');
+            const fechaCheckOutInput = document.getElementById('fechaCheckOut');
+            const categoriaSelect = document.getElementById('categoria');
+
+            fechaCheckInInput.disabled = true;
+            fechaCheckOutInput.disabled = true;
+            categoriaSelect.disabled = true;
+
+            var loadingMessage = document.getElementById('loadingMessage');
+            loadingMessage.style.display = 'block';
+            loadingMessage.textContent = 'Si deseas volver a cotizar, actualiza esta página';
+
+        }
+    </script>
+</body>
+
+</html>
